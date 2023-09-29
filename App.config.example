@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+	
+	<configSections>
+		<section name="MageConfig" type="System.Configuration.NameValueSectionHandler" />
+		<section name="WooConfig" type="System.Configuration.NameValueSectionHandler" />
+	</configSections>
+
+	<MageConfig>
+		<add key="MagentoBaseUrl" value="https://example.com/magento" />
+		<add key="MagentoAccessToken" value="you_access_token" />
+	</MageConfig>
+
+	<WooConfig>
+		<add key="WooCommerceBaseUrl" value="https://example.com/woocommerce" />
+		<add key="WooCommerceConsumerKey" value="your_woocommerce_consumer_key" />
+		<add key="WooCommerceConsumerSecret" value="your_woocommerce_consumer_secret" />
+	</WooConfig>
+	
+</configuration>
