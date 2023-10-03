@@ -39,11 +39,51 @@ class Program
 
         List<AttributeSet> attributeSets = await magentoClient.GetAttributeSetsAsync();
 
-        foreach (var attributeSet in attributeSets)
+
+        int totalProducts = 0;
+
+        foreach (AttributeSet attributeSet in attributeSets)
         {
-            Console.WriteLine($"attribute_set_id: {attributeSet.attribute_set_id}");
-            Console.WriteLine($"attribute_set_name: {attributeSet.attribute_set_name}");
+            Console.Clear();
+            Console.WriteLine($"Attribute Set: {attributeSet.attribute_set_name}");
+
+            int totalCount = await magentoClient.GetTotalCountProductsInAttrSet(attributeSet, 1, 1);
+
+            List<ProductMage> productsMageRoot = new List<ProductMage>();
+
+            if (totalCount > 0)
+            {
+                int rounds = totalCount / 100;
+                int rest = totalCount % 100;
+
+                for (int i = 1; i <= rounds; i++)
+                {
+                    productsMageRoot.AddRange(await magentoClient.GetProductsByAttrSet(attributeSet, 100, i));
+                }
+
+                if(rest > 0) { 
+                    productsMageRoot.AddRange(await magentoClient.GetProductsByAttrSet(attributeSet, rest, rounds));
+                }
+
+                foreach (ProductMage product in productsMageRoot)
+                {
+                    Console.WriteLine($"Product: {product.name} | SKU: {product.sku}");
+                    totalProducts++;
+                }
+
+                await Task.Delay(7000);
+
+            }
+
+            
+
         }
+
+        Console.WriteLine($"Number of Products To Migrate: ==== {totalProducts}");
+
+
+
+
 
     }
 }
