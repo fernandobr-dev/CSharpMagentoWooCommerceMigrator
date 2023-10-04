@@ -44,7 +44,6 @@ class Program
 
         foreach (AttributeSet attributeSet in attributeSets)
         {
-            Console.Clear();
             Console.WriteLine($"Attribute Set: {attributeSet.attribute_set_name}");
 
             int totalCount = await magentoClient.GetTotalCountProductsInAttrSet(attributeSet, 1, 1);
@@ -68,10 +67,26 @@ class Program
                 foreach (ProductMage product in productsMageRoot)
                 {
                     Console.WriteLine($"Product: {product.name} | SKU: {product.sku}");
+
+                    if (product.extension_attributes != null)
+                    {
+                        foreach (CategoryLink categoryLink in product.extension_attributes.category_links)
+                        {
+                            Console.WriteLine($"Category Link: Position: {categoryLink.position}, Category ID: {categoryLink.category_id}");
+                        }
+                    }
+
+                    if (product.media_gallery_entries != null)
+                    {
+                        foreach(MediaGalleryEntries mediaGallery in product.media_gallery_entries)
+                        {
+                            Console.WriteLine($"Image: {mediaGallery.file}");
+                        }
+                    }
+
                     totalProducts++;
                 }
 
-                await Task.Delay(7000);
 
             }
 
@@ -80,6 +95,8 @@ class Program
         }
 
         Console.WriteLine($"Number of Products To Migrate: ==== {totalProducts}");
+
+
 
 
 
