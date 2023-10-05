@@ -83,16 +83,14 @@ namespace CSharpMagentoWooCommerceMigrator
             }
         }
 
-        public async Task<List<ProductMage>> GetProductsByAttrSet(AttributeSet attributeSet, int pageSize, int currentPage)
+        public async Task<List<ProductMage>> GetProductsByAttrSet(AttributeSet attributeSet)
         {
             try
             {
                 string productsByAttributeSetEndpoint = $"{_baseApiUrl}/rest/V1/products?" +
                     $"searchCriteria[filterGroups][0][filters][0][field]=attribute_set_id&" +
                     $"searchCriteria[filterGroups][0][filters][0][value]={attributeSet.attribute_set_id}&" +
-                    $"searchCriteria[filterGroups][0][filters][0][conditionType]=eq&" +
-                    $"searchCriteria[pageSize]={pageSize}&" +
-                    $"searchCriteria[currentPage]={currentPage}";
+                    $"searchCriteria[filterGroups][0][filters][0][conditionType]=eq";
 
                 _httpClient.DefaultRequestHeaders.Clear();
 
@@ -125,48 +123,6 @@ namespace CSharpMagentoWooCommerceMigrator
                 return null;
             }
         }
-
-        public async Task<int> GetTotalCountProductsInAttrSet(AttributeSet attributeSet, int pageSize, int currentPage)
-        {
-            try
-            {
-                string productsByAttributeSetEndpoint = $"{_baseApiUrl}/rest/V1/products?" +
-                    $"searchCriteria[filterGroups][0][filters][0][field]=attribute_set_id&" +
-                    $"searchCriteria[filterGroups][0][filters][0][value]={attributeSet.attribute_set_id}&" +
-                    $"searchCriteria[filterGroups][0][filters][0][conditionType]=eq&" +
-                    $"searchCriteria[pageSize]={pageSize}&" +
-                    $"searchCriteria[currentPage]={currentPage}";
-
-                _httpClient.DefaultRequestHeaders.Clear();
-
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
-
-                HttpResponseMessage response = await _httpClient.GetAsync(productsByAttributeSetEndpoint);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-
-                    JObject jsonObject = JObject.Parse(responseBody);
-                    int totalCount = (int)jsonObject["total_count"];
-
-                    return totalCount;
-                }
-                else
-                {
-                    Console.WriteLine($"No Produts Found in Attribute Set: {attributeSet.attribute_set_name}");
-
-                    return 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-
-                return 0;
-            }
-        }
-
 
     }
 }

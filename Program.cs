@@ -39,62 +39,40 @@ class Program
 
         List<AttributeSet> attributeSets = await magentoClient.GetAttributeSetsAsync();
 
-
-        int totalProducts = 0;
-
         foreach (AttributeSet attributeSet in attributeSets)
         {
+            Console.Clear();
             Console.WriteLine($"Attribute Set: {attributeSet.attribute_set_name}");
 
-            int totalCount = await magentoClient.GetTotalCountProductsInAttrSet(attributeSet, 1, 1);
+            List<ProductMage> productsMage = await magentoClient.GetProductsByAttrSet(attributeSet);
 
-            List<ProductMage> productsMageRoot = new List<ProductMage>();
+            // check if the attribute_set has products.
+            if (productsMage.Count() > 0) { 
 
-            if (totalCount > 0)
-            {
-                int rounds = totalCount / 100;
-                int rest = totalCount % 100;
-
-                for (int i = 1; i <= rounds; i++)
+                foreach (ProductMage productMage in productsMage)
                 {
-                    productsMageRoot.AddRange(await magentoClient.GetProductsByAttrSet(attributeSet, 100, i));
-                }
+                    if (productMage.type_id == "simple") { //only export to Woocommerce simple products. 
+                        string json = wooClient.PrepareWooProductJSONFromMagento(productMage);
 
-                if(rest > 0) { 
-                    productsMageRoot.AddRange(await magentoClient.GetProductsByAttrSet(attributeSet, rest, rounds));
-                }
+                        // send product to Woo. 
+                        bool productSentSuccessfully = await wooClient.SendProductToWooCommerce(json);
 
-                foreach (ProductMage product in productsMageRoot)
-                {
-                    Console.WriteLine($"Product: {product.name} | SKU: {product.sku}");
-
-                    if (product.extension_attributes != null)
-                    {
-                        foreach (CategoryLink categoryLink in product.extension_attributes.category_links)
+                        if (productSentSuccessfully)
                         {
-                            Console.WriteLine($"Category Link: Position: {categoryLink.position}, Category ID: {categoryLink.category_id}");
+                            Console.WriteLine($"Product: {productMage.name} sent successfully.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(json);
+                            throw new Exception($"Error sending product '{productMage.name}'. The operation will be terminated.");
                         }
                     }
-
-                    if (product.media_gallery_entries != null)
-                    {
-                        foreach(MediaGalleryEntries mediaGallery in product.media_gallery_entries)
-                        {
-                            Console.WriteLine($"Image: {mediaGallery.file}");
-                        }
-                    }
-
-                    totalProducts++;
                 }
-
 
             }
-
-            
-
+            Task.Delay(1000);
         }
 
-        Console.WriteLine($"Number of Products To Migrate: ==== {totalProducts}");
 
 
 
@@ -102,5 +80,7 @@ class Program
 
 
 
-    }
+
+
+        }
 }
