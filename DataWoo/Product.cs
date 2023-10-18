@@ -12,4 +12,13 @@ public class ProductWoo
     public string short_description {  get; set; }
     public List<Images> images { get; set; }
     public string slug {  get; set; }
+    public List<CatProduct> categories {  get; set; }
 }
+
+public class CatProduct
+{
+    public int id { get; set; }
+}
+
+
+
