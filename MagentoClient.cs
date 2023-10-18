@@ -85,18 +85,65 @@ namespace CSharpMagentoWooCommerceMigrator
 
         public async Task<List<ProductMage>> GetProductsByAttrSet(AttributeSet attributeSet)
         {
+            int maxRetries = 3;  // Número máximo de tentativas
+            int currentRetry = 0;
+
+            List<ProductMage> productsData = null;
+
+            while (currentRetry < maxRetries)
+            {
+                try
+                {
+                    string productsByAttributeSetEndpoint = $"{_baseApiUrl}/rest/V1/products?" +
+                        $"searchCriteria[filterGroups][0][filters][0][field]=attribute_set_id&" +
+                        $"searchCriteria[filterGroups][0][filters][0][value]={attributeSet.attribute_set_id}&" +
+                        $"searchCriteria[filterGroups][0][filters][0][conditionType]=eq";
+
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+
+                    HttpResponseMessage response = await _httpClient.GetAsync(productsByAttributeSetEndpoint);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        JObject jsonObject = JObject.Parse(responseBody);
+                        JArray items = (JArray)jsonObject["items"];
+                        productsData = items.ToObject<List<ProductMage>>();
+                        break;  // Dados obtidos com sucesso, saia do loop
+                    }
+
+                    Console.WriteLine($"No Produts Found in Attribute Set: {attributeSet.attribute_set_name}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Attempt {currentRetry + 1} failed: {ex.Message}");
+                }
+
+                currentRetry++;
+                await Task.Delay(1000);  // Aguarde um segundo antes de tentar novamente (pode ser ajustado)
+            }
+
+            if (productsData == null)
+            {
+                Console.WriteLine("Failed to retrieve products after multiple attempts.");
+            }
+
+            // Continue com os dados obtidos (ou nulos, se todas as tentativas falharem)
+            return productsData;
+        }
+
+        public async Task<List<Category>> GetCategories()
+        {
             try
             {
-                string productsByAttributeSetEndpoint = $"{_baseApiUrl}/rest/V1/products?" +
-                    $"searchCriteria[filterGroups][0][filters][0][field]=attribute_set_id&" +
-                    $"searchCriteria[filterGroups][0][filters][0][value]={attributeSet.attribute_set_id}&" +
-                    $"searchCriteria[filterGroups][0][filters][0][conditionType]=eq";
+                string categoriesEndpoint = $"{_baseApiUrl}/rest/V1/categories/list?searchCriteria=0";
 
                 _httpClient.DefaultRequestHeaders.Clear();
 
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
 
-                HttpResponseMessage response = await _httpClient.GetAsync(productsByAttributeSetEndpoint);
+                HttpResponseMessage response = await _httpClient.GetAsync(categoriesEndpoint);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -105,16 +152,15 @@ namespace CSharpMagentoWooCommerceMigrator
                     JObject jsonObject = JObject.Parse(responseBody);
                     JArray items = (JArray)jsonObject["items"];
 
-                    List<ProductMage> productsData = items.ToObject<List<ProductMage>>();
+                    List<Category> categoriesList = items.ToObject<List<Category>>();
 
-                    return productsData;
-                }
-                else
-                {
-                    Console.WriteLine($"No Produts Found in Attribute Set: {attributeSet.attribute_set_name}");
 
-                    return null;
+                    return categoriesList;
                 }
+
+                Console.WriteLine("No Categories Found");
+
+                return null;
             }
             catch (Exception ex)
             {
@@ -123,6 +169,5 @@ namespace CSharpMagentoWooCommerceMigrator
                 return null;
             }
         }
-
     }
 }
