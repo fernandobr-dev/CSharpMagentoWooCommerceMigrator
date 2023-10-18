@@ -85,7 +85,7 @@ namespace CSharpMagentoWooCommerceMigrator
 
         public async Task<List<ProductMage>> GetProductsByAttrSet(AttributeSet attributeSet)
         {
-            int maxRetries = 3;  // Número máximo de tentativas
+            int maxRetries = 3;  
             int currentRetry = 0;
 
             List<ProductMage> productsData = null;
@@ -110,7 +110,7 @@ namespace CSharpMagentoWooCommerceMigrator
                         JObject jsonObject = JObject.Parse(responseBody);
                         JArray items = (JArray)jsonObject["items"];
                         productsData = items.ToObject<List<ProductMage>>();
-                        break;  // Dados obtidos com sucesso, saia do loop
+                        break;  
                     }
 
                     Console.WriteLine($"No Produts Found in Attribute Set: {attributeSet.attribute_set_name}");
@@ -121,7 +121,7 @@ namespace CSharpMagentoWooCommerceMigrator
                 }
 
                 currentRetry++;
-                await Task.Delay(1000);  // Aguarde um segundo antes de tentar novamente (pode ser ajustado)
+                await Task.Delay(1000);  
             }
 
             if (productsData == null)
